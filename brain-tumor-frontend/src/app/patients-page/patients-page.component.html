@@ -1,0 +1,137 @@
+<div class="min-h-screen bg-gray-50">
+
+  <!-- Navbar -->
+  <nav class="bg-gradient-to-r from-pink-500 to-purple-500 text-white sticky top-0 z-50 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <a routerLink="/" class="flex items-center space-x-3">
+          <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-2">
+            <lucide-icon [img]="Brain" class="h-6 w-6"></lucide-icon>
+          </div>
+          <span class="text-xl font-bold">NeuroScan AI - Patient Portal</span>
+        </a>
+
+        <div class="flex items-center space-x-4">
+          <span>Welcome, <span class="font-semibold">{{ username }}</span></span>
+          <div class="relative" #userMenuContainer>
+            <button (click)="toggleUserMenu()" class="flex items-center space-x-2 bg-white/20 px-3 py-2 rounded-lg hover:bg-white/30 transition">
+              <div class="w-8 h-8 bg-white/30 rounded-full flex items-center justify-center">
+                <span class="text-sm font-semibold text-white">{{ getUserInitials() }}</span>
+              </div>
+              <lucide-icon [img]="ChevronDown" class="w-4 h-4 text-white"></lucide-icon>
+            </button>
+
+            <div *ngIf="isUserMenuOpen" class="absolute right-0 mt-2 w-48 bg-white text-gray-700 rounded-lg shadow-lg border py-1 z-50">
+              <a href="/profile" class="block px-4 py-2 hover:bg-gray-50">Profile</a>
+              <a href="/dashboard" class="block px-4 py-2 hover:bg-gray-50">Dashboard</a>
+              <a href="/settings" class="block px-4 py-2 hover:bg-gray-50">Settings</a>
+              <hr class="my-1">
+              <button (click)="logout()" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">Sign Out</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-900 mb-1">Your Scan Results</h1>
+      <p class="text-gray-600">Review your scan results and details from your doctors.</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="mb-6 flex flex-col sm:flex-row gap-4">
+      <!-- Global Search -->
+      <div class="flex-1">
+        <input type="text" [(ngModel)]="searchQuery" (input)="applyFilters()"
+               placeholder="Search scans..."
+               class="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500" />
+      </div>
+
+      <!-- Doctor Filter -->
+      <div class="sm:w-64">
+        <select [(ngModel)]="selectedDoctor" (change)="applyFilters()"
+                class="w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-500 bg-white">
+          <option value="">All Doctors</option>
+          <option *ngFor="let doctor of uniqueDoctors" [value]="doctor">{{ doctor }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-100">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+              (click)="sortColumn('date')">
+            Date
+            <span *ngIf="sort.column==='date'">{{ sort.direction==='asc' ? '▲' : '▼' }}</span>
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+              (click)="sortColumn('classification')">
+            Classification
+            <span *ngIf="sort.column==='classification'">{{ sort.direction==='asc' ? '▲' : '▼' }}</span>
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+              (click)="sortColumn('confidence')">
+            Confidence
+            <span *ngIf="sort.column==='confidence'">{{ sort.direction==='asc' ? '▲' : '▼' }}</span>
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+              (click)="sortColumn('doctorName')">
+            Doctor
+            <span *ngIf="sort.column==='doctorName'">{{ sort.direction==='asc' ? '▲' : '▼' }}</span>
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Notes
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Actions
+          </th>
+        </tr>
+        </thead>
+
+        <tbody class="bg-white divide-y divide-gray-200">
+        <tr *ngFor="let result of filteredResults" class="hover:bg-gray-50 transition-colors">
+          <td class="px-6 py-4">{{ result.date }}</td>
+          <td class="px-6 py-4">
+              <span [ngClass]="{
+                  'bg-yellow-100 text-yellow-800': result.classification.toLowerCase().includes('none'),
+                  'bg-red-100 text-red-800': result.classification.toLowerCase().includes('tumor'),
+                  'bg-green-100 text-green-800': !result.classification.toLowerCase().includes('tumor')
+                }" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                {{ result.classification == "NONE" ? "Rejected model prediction" : result.classification}}
+              </span>
+          </td>
+          <td class="px-6 py-4">
+            <div class="flex items-center">
+              <div class="flex-1 bg-gray-200 rounded-full h-2 mr-3">
+                <div class="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full"
+                     [style.width.%]="result.confidence*100"></div>
+              </div>
+              <span class="text-sm font-medium">{{ (result.confidence*100 == 0 ? " " : result.confidence*100 ) | number:'1.0-0' }}%</span>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-900">{{ result.doctor.name + "  " + result.doctor.surname}}</td>
+          <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate" [title]="result.notes">{{ result.notes || 'No notes' }}</td>
+          <td class="px-6 py-4 text-sm font-medium">
+            <app-pdf-generator [result]="result"></app-pdf-generator>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredResults.length === 0" class="text-center py-12">
+        <lucide-icon [img]="FileText" class="mx-auto h-12 w-12 text-gray-400"></lucide-icon>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No results found</h3>
+        <p class="mt-1 text-sm text-gray-500">Try adjusting your search or filter criteria.</p>
+      </div>
+    </div>
+  </div>
+</div>

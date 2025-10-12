@@ -1,0 +1,183 @@
+<div class="min-h-screen bg-white">
+
+  <!-- Navbar -->
+  <nav class="bg-white/95 backdrop-blur-sm border-b border-gray-100 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center space-x-3">
+          <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-2">
+            <lucide-icon [img]="Brain" class="h-8 w-8 text-white"></lucide-icon>
+          </div>
+          <span class="text-xl font-bold text-gray-900">NeuroScan AI</span>
+        </div>
+
+        <!-- Desktop Menu -->
+        <div class="hidden md:flex space-x-8 items-center">
+          <ng-container *ngIf="isLoggedIn">
+            <!-- Doctor-specific navigation -->
+            <div *ngIf="hasRoleDoctor()" class="flex items-center space-x-6">
+              <a routerLink="/doctor" class="text-gray-700 hover:text-blue-600 transition font-medium">
+                Patients Scans
+              </a>
+              <a routerLink="/report" class="text-gray-700 hover:text-blue-600 transition font-medium">
+                Create AI Report
+              </a>
+            </div>
+
+            <!-- Patient-specific navigation -->
+            <div *ngIf="!hasRoleDoctor()" class="flex items-center space-x-6">
+              <a routerLink="/patient" class="text-gray-700 hover:text-blue-600 transition font-medium">
+                My Results
+              </a>
+            </div>
+          </ng-container>
+
+          <!-- Not logged in -->
+          <ng-container *ngIf="!isLoggedIn">
+            <button routerLink="/register" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:shadow-lg transition transform hover:-translate-y-0.5">
+              Get Started
+            </button>
+          </ng-container>
+
+          <!-- Logged in user menu -->
+          <ng-container *ngIf="isLoggedIn">
+            <div class="flex items-center space-x-4">
+              <span class="text-gray-700">Welcome, <span class="font-semibold text-blue-600">{{ username }}</span></span>
+              <div class="relative" #userMenuContainer>
+                <button
+                  (click)="toggleUserMenu()"
+                  class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition p-2 rounded-lg hover:bg-gray-50">
+                  <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                    <span class="text-white text-sm font-semibold">{{ getUserInitials() }}</span>
+                  </div>
+                  <lucide-icon [img]="ChevronDown" class="w-4 h-4"></lucide-icon>
+                </button>
+
+                <!-- User dropdown menu -->
+                <div *ngIf="isUserMenuOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
+                  <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition">
+                    <lucide-icon [img]="User" class="w-4 h-4 inline mr-2"></lucide-icon>
+                    Profile
+                  </a>
+                  <a href="/dashboard" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition">
+                    <lucide-icon [img]="LayoutDashboard" class="w-4 h-4 inline mr-2"></lucide-icon>
+                    Dashboard
+                  </a>
+                  <a href="/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition">
+                    <lucide-icon [img]="Settings" class="w-4 h-4 inline mr-2"></lucide-icon>
+                    Settings
+                  </a>
+                  <hr class="my-1">
+                  <button
+                    (click)="logout()"
+                    class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition">
+                    <lucide-icon [img]="LogOut" class="w-4 h-4 inline mr-2"></lucide-icon>
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- Mobile Menu Toggle -->
+        <div class="md:hidden">
+          <button (click)="toggleMenu()" class="text-gray-700 hover:text-blue-600">
+            <lucide-icon *ngIf="isMenuOpen" [img]="X" class="w-6 h-6"></lucide-icon>
+            <lucide-icon *ngIf="!isMenuOpen" [img]="Menu" class="w-6 h-6"></lucide-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div *ngIf="isMenuOpen" class="md:hidden bg-white border-t border-gray-100">
+      <div class="px-4 py-4 space-y-2 flex flex-col">
+        <a href="#features" class="block text-gray-700">Features</a>
+        <a href="#how-it-works" class="block text-gray-700">How It Works</a>
+        <a href="#contact" class="block text-gray-700">Contact</a>
+        <button routerLink="/register" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg">
+          Get Started
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-32 text-center">
+    <div class="max-w-3xl mx-auto px-4">
+      <div class="inline-flex items-center bg-blue-100 rounded-full px-4 py-2 mb-6">
+        <lucide-icon [img]="Zap" class="w-4 h-4 text-blue-600 mr-2"></lucide-icon>
+        <span class="text-blue-700 text-sm font-medium">AI-Powered Medical Imaging</span>
+      </div>
+      <h1 class="text-5xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+        Advanced Brain Tumor
+        <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"> Detection</span>
+      </h1>
+      <p class="text-xl text-gray-600 mb-10">
+        Revolutionizing healthcare with AI-powered brain scan analysis. Doctors can upload scans, add commentary, and patients can view or download medical history.
+      </p>
+      <div class="flex justify-center gap-4 flex-wrap">
+        <button class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold flex items-center gap-2 hover:shadow-xl transition transform hover:-translate-y-1">
+          Start Today
+          <lucide-icon [img]="ArrowRight" class="w-5 h-5"></lucide-icon>
+        </button>
+        <button (click)="openDemo()" class="border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-xl font-semibold hover:border-blue-600 hover:text-blue-600 transition">
+          Watch Demo
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modal -->
+  <div *ngIf="showDemoModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+    <div class="bg-white rounded-xl relative w-full max-w-4xl h-[70vh]">
+      <!-- Close Button -->
+      <button (click)="closeDemo()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-800 font-bold text-2xl">&times;</button>
+
+      <!-- YouTube Embed -->
+      <iframe
+        class="w-full h-full rounded-xl"
+        src="https://www.youtube.com/embed/kuQ1zFVsnIc"
+        title="YouTube video player"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <section id="features" class="py-24 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-12">
+        Powerful Features for <span class="text-blue-600">Modern Healthcare</span>
+      </h2>
+      <div class="grid md:grid-cols-3 gap-8">
+        <div *ngFor="let feature of features; let i = index"
+             (click)="setActiveFeature(i)"
+             [ngClass]="activeFeature === i ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 shadow-lg' : 'bg-gray-50 hover:bg-gray-100'"
+             class="p-6 rounded-2xl cursor-pointer transition-all duration-300">
+          <div [ngClass]="activeFeature === i ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white' : 'bg-gray-200 text-gray-600'"
+               class="inline-flex p-3 rounded-lg mb-4 justify-center">
+            <lucide-icon [img]="feature.icon" class="w-8 h-8"></lucide-icon>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">{{feature.title}}</h3>
+          <p class="text-gray-600">{{feature.description}}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
+      <p>&copy; 2025 NeuroScan AI. All rights reserved.</p>
+      <div class="flex gap-6 mt-4 md:mt-0">
+        <a href="#" class="hover:text-blue-400">Privacy Policy</a>
+        <a href="#" class="hover:text-blue-400">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+</div>
