@@ -11,6 +11,7 @@ The Spring Boot backend serves as the **data management layer** between the Angu
 - **User Authentication** (Doctor/Patient login and registration)
 - **Result Management** (Storing and retrieving MRI scan predictions)
 - **Patient-Doctor Relationship** (Linking results to specific patients and doctors)
+- **Email Notifications** (Automated email alerts to patients when results are ready)
 
 ---
 
@@ -44,12 +45,16 @@ brain-tumor-detection-backend/
 │   │   │       │   └── ResultRepository.java
 │   │   │       ├── service/
 │   │   │       │   ├── BtdUserService.java
-│   │   │       │   └── ResultServiceImpl.java
+│   │   │       │   ├── ResultServiceImpl.java
+│   │   │       │   └── EmailService.java          # Email notification service
 │   │   │       └── web/
 │   │   │           ├── BtdUserController.java    # User API endpoints
 │   │   │           └── ResultController.java     # Result API endpoints
 │   │   └── resources/
-│   │       └── application.properties
+│   │       ├── application.properties
+│   │       └── static/
+│   │           └── images/
+│   │               └── logo.png               # Email logo image
 │   └── test/
 │
 ├── pom.xml                                   # Maven dependencies
@@ -78,6 +83,7 @@ brain-tumor-detection-backend/
    
    Edit `src/main/resources/application.properties`:
    ```properties
+   # Database Configuration
    spring.datasource.url=jdbc:postgresql://localhost:5432/brain_tumor_db
    spring.datasource.username=your_username
    spring.datasource.password=your_password
@@ -86,8 +92,19 @@ brain-tumor-detection-backend/
    spring.jpa.show-sql=true
    spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
    
+   # Server Configuration
    server.port=8080
+   
+   # Email Configuration (Gmail example)
+   spring.mail.host=smtp.gmail.com
+   spring.mail.port=587
+   spring.mail.username=your_email@gmail.com
+   spring.mail.password=your_app_password
+   spring.mail.properties.mail.smtp.auth=true
+   spring.mail.properties.mail.smtp.starttls.enable=true
    ```
+   
+   **Note:** For Gmail, you need to generate an [App Password](https://support.google.com/accounts/answer/185833) instead of using your regular password.
 
 3. **Install dependencies**
    ```bash
@@ -241,6 +258,75 @@ Retrieve all results for a specific patient (by EMBG)
 
 ---
 
+## 📧 Email Notification System
+
+The application includes an **automated email notification service** that alerts patients when their MRI scan results are ready.
+
+### **Email Service Features**
+
+- **HTML Email Templates**: Professional, branded email design
+- **Inline Logo**: NeuroScan logo embedded in emails
+- **Direct Link**: One-click access to patient portal
+- **Automatic Triggering**: Emails sent when doctors save results
+
+### **Email Template**
+
+The email includes:
+- NeuroScan AI Portal branding with logo
+- Personalized patient greeting
+- Professional styling with gradient button
+- Direct link to view results at `http://localhost:4200/patient`
+
+### **Configuration**
+
+1. **Add logo image**: Place your logo at:
+   ```
+   src/main/resources/static/images/logo.png
+   ```
+
+2. **Configure SMTP** in `application.properties`:
+   ```properties
+   spring.mail.host=smtp.gmail.com
+   spring.mail.port=587
+   spring.mail.username=your_email@gmail.com
+   spring.mail.password=your_app_password
+   ```
+
+3. **Gmail Setup** (if using Gmail):
+   - Enable 2-factor authentication
+   - Generate an [App Password](https://support.google.com/accounts/answer/185833)
+   - Use the app password in configuration
+
+### **Usage**
+
+The `EmailService` is automatically triggered when a result is saved:
+
+```java
+emailService.sendResultNotification(
+    patientEmail, 
+    patientName
+);
+```
+
+### **Email Preview**
+
+```
+┌──────────────────────────────────┐
+│      [NeuroScan Logo]            │
+│                                  │
+│  Hello John Doe,                 │
+│                                  │
+│  Your medical result has been    │
+│  processed and is now available  │
+│  on the NeuroScan AI Portal.     │
+│                                  │
+│     [View Result Button]         │
+│                                  │
+└──────────────────────────────────┘
+```
+
+---
+
 ## 🌐 CORS Configuration
 
 The backend is configured to accept requests from the Angular frontend running on `http://localhost:4200`:
@@ -280,37 +366,6 @@ For production, update this to your deployed frontend URL.
 
 ---
 
-## 🔒 Security Considerations
-
-**Current Implementation:**
-- Basic authentication (email/password)
-- CORS enabled for Angular frontend
-
-**Recommended for Production:**
-1. **Password Hashing**: Use BCrypt to hash passwords
-   ```java
-   @Bean
-   public PasswordEncoder passwordEncoder() {
-       return new BCryptPasswordEncoder();
-   }
-   ```
-
-2. **JWT Authentication**: Implement token-based authentication
-   ```xml
-   <dependency>
-       <groupId>io.jsonwebtoken</groupId>
-       <artifactId>jjwt</artifactId>
-   </dependency>
-   ```
-
-3. **Input Validation**: Add `@Valid` annotations and validation constraints
-
-4. **HTTPS**: Enable SSL/TLS for encrypted communication
-
-5. **Rate Limiting**: Prevent brute force attacks
-
----
-
 ## 🔗 Integration with FastAPI
 
 The Spring Boot backend works alongside the FastAPI ML service:
@@ -327,6 +382,15 @@ User uploads MRI → Angular → FastAPI (prediction)
                     Result displayed
                          ↓
                   Spring Boot (save to DB)
+```
+
+---
+
+## 🧪 Testing
+
+Run unit tests:
+```bash
+mvn test
 ```
 
 ---
@@ -355,6 +419,12 @@ Add to `pom.xml`:
         <scope>runtime</scope>
     </dependency>
     
+    <!-- Spring Boot Starter Mail -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-mail</artifactId>
+    </dependency>
+    
     <!-- Lombok (Optional) -->
     <dependency>
         <groupId>org.projectlombok</groupId>
@@ -370,8 +440,6 @@ Add to `pom.xml`:
     </dependency>
 </dependencies>
 ```
-
----
 
 ## 👥 Contributors
 
